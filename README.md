@@ -1,4 +1,3 @@
-Here's a complete `README.md` for the **LYFMATR** repository, structured exactly like the SecureVisionX example you provided. You can copy this directly into your repo.
 
 ```markdown
 # 👑 LYFMATR
@@ -266,7 +265,7 @@ Please read our [Contributing Guidelines](CONTRIBUTING.md) for more details.
 
 ## 🧩 Author
 
-**Your Name / Team Name**  
+**R JOEL/ OMEGA CONSORTIUM**  
 📧 [rjoeleightsevensix@gmail.com](mailto:your-email@example.com)  
 🔗 [GitHub](https://github.com/joel876r/LYFMATR)
 
