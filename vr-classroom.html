@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>EduBridge VR Classroom</title>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <style>
+    body { margin: 0; background: #000; font-family: 'Segoe UI', sans-serif; }
+    #ui-overlay {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.8rem 1.5rem;
+      background: linear-gradient(180deg, rgba(0,0,0,0.75) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    #ui-overlay .logo {
+      font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: 0.02em;
+    }
+    #ui-overlay .hint {
+      font-size: 0.78rem; color: rgba(255,255,255,0.65);
+    }
+    #back-btn {
+      position: fixed; top: 1rem; left: 1rem; z-index: 1000;
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+      color: #fff; padding: 0.4rem 1rem; border-radius: 8px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; backdrop-filter: blur(8px);
+      pointer-events: all;
+    }
+    #back-btn:hover { background: rgba(255,255,255,0.25); }
+    #lesson-selector {
+      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+      z-index: 1000; display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center;
+    }
+    .lesson-btn {
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; padding: 0.45rem 1.1rem; border-radius: 999px; cursor: pointer;
+      font-size: 0.8rem; font-weight: 600; backdrop-filter: blur(8px); transition: all 0.2s;
+    }
+    .lesson-btn:hover, .lesson-btn.active { background: #0056D2; border-color: #0056D2; }
+  </style>
+</head>
+<body>
+
+  <div id="ui-overlay">
+    <div class="logo">🎓 EduBridge VR Classroom</div>
+    <div class="hint">👀 Look around · 🖱️ Click hotspots · 🥽 VR headset supported</div>
+  </div>
+
+  <button id="back-btn" onclick="window.close()">← Exit VR</button>
+
+  <div id="lesson-selector">
+    <button class="lesson-btn active" onclick="loadLesson('cloud')">☁️ Cloud Architecture</button>
+    <button class="lesson-btn" onclick="loadLesson('ml')">🤖 Machine Learning</button>
+    <button class="lesson-btn" onclick="loadLesson('web')">🌐 Web Development</button>
+    <button class="lesson-btn" onclick="loadLesson('data')">📊 Data Science</button>
+  </div>
+
+  <a-scene vr-mode-ui="enabled: true" loading-screen="dotsColor: #0056D2; backgroundColor: #0f1117">
+
+    <!-- ── ASSETS ── -->
+    <a-assets>
+      <img id="sky-space"   src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Space_Shuttle_Columbia_launching.jpg/1280px-Space_Shuttle_Columbia_launching.jpg" crossorigin="anonymous" />
+    </a-assets>
+
+    <!-- ── SKY / ENVIRONMENT ── -->
+    <a-sky id="sky" color="#0d1b3e"></a-sky>
+
+    <!-- Stars particles -->
+    <a-entity id="stars" position="0 0 0">
+      <a-particle-system color="#ffffff" opacity="0.7" size="0.05" particle-count="200" velocity="0 0 0" acceleration="0 0 0" max-age="99999"></a-particle-system>
+    </a-entity>
+
+    <!-- Floor grid -->
+    <a-entity id="floor">
+      <a-plane rotation="-90 0 0" width="40" height="40" color="#050d1f"
+               material="wireframe: true; wireframeLinewidth: 1; opacity: 0.4; transparent: true"></a-plane>
+      <a-plane rotation="-90 0 0" width="40" height="40" color="#0a1628"
+               material="opacity: 0.9; transparent: false"></a-plane>
+    </a-entity>
+
+    <!-- ── CAMERA ── -->
+    <a-camera position="0 1.6 0" look-controls wasd-controls>
+      <a-cursor color="#93C5FD" fuse="false" rayOrigin="mouse"
+                material="color: #93C5FD; shader: flat; opacity: 0.9"
+                geometry="primitive: ring; radiusInner: 0.012; radiusOuter: 0.02"
+                animation__click="property: scale; startEvents: click; from: 0.1 0.1 0.1; to: 1 1 1; dur: 200">
+      </a-cursor>
+    </a-camera>
+
+    <!-- ── CLASSROOM STRUCTURE ── -->
+
+    <!-- Main screen / whiteboard -->
+    <a-entity id="main-screen" position="0 2.2 -5">
+      <!-- Screen frame -->
+      <a-box color="#0a1628" width="7.2" height="4.2" depth="0.08"
+             material="color: #0a1628; roughness: 0.5"></a-box>
+      <!-- Screen glow border -->
+      <a-box color="#0056D2" width="7.4" height="4.4" depth="0.04" position="0 0 -0.05"
+             material="color: #0056D2; emissive: #0056D2; emissiveIntensity: 0.3; opacity: 0.8; transparent: true"></a-box>
+      <!-- Screen title -->
+      <a-text id="lesson-title" value="☁️ Cloud Architecture 101" align="center"
+              color="#93C5FD" width="6" position="0 1.5 0.06"
+              font="https://cdn.aframe.io/fonts/mozillavr.fnt"
+              shader="msdf" negate="false"></a-text>
+      <!-- Screen content -->
+      <a-text id="lesson-content"
+              value="Cloud computing delivers on-demand computing\nservices over the internet — enabling faster\ninnovation, flexible resources, and economies of scale.\n\n🔵 IaaS  ·  🟢 PaaS  ·  🟣 SaaS\n\n▸ AWS  |  Azure  |  Google Cloud"
+              align="center" color="#E2E8F0" width="5.5" position="0 0.2 0.06"
+              line-height="55" letter-spacing="0"></a-text>
+    </a-entity>
+
+    <!-- ── FLOATING TOPIC PODS ── -->
+
+    <!-- Pod 1 — Left -->
+    <a-entity id="pod-left" position="-4 1.6 -3"
+              animation="property: position; to: -4 1.9 -3; dur: 3000; dir: alternate; loop: true; easing: easeInOutSine">
+      <a-icosahedron radius="0.45" detail="1"
+                     material="color: #0056D2; emissive: #0056D2; emissiveIntensity: 0.4; wireframe: true"></a-icosahedron>
+      <a-text value="☁️\nCompute" align="center" color="#93C5FD" width="2.5" position="0 0 0.5"
+              shader="msdf" negate="false"></a-text>
+      <!-- Clickable surface -->
+      <a-sphere radius="0.5" material="opacity: 0; transparent: true" class="clickable"
+                id="hotspot-compute"
+                animation__mouseenter="property: scale; to: 1.2 1.2 1.2; startEvents: mouseenter; dur: 200"
+                animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200">
+      </a-sphere>
+    </a-entity>
+
+    <!-- Pod 2 — Right -->
+    <a-entity id="pod-right" position="4 1.6 -3"
+              animation="property: position; to: 4 1.3 -3; dur: 3500; dir: alternate; loop: true; easing: easeInOutSine">
+      <a-octahedron radius="0.45"
+                    material="color: #7C3AED; emissive: #7C3AED; emissiveIntensity: 0.4; wireframe: true"></a-octahedron>
+      <a-text value="🗄️\nStorage" align="center" color="#C4AFFF" width="2.5" position="0 0 0.5"
+              shader="msdf" negate="false"></a-text>
+      <a-sphere radius="0.5" material="opacity: 0; transparent: true" class="clickable"
+                id="hotspot-storage"
+                animation__mouseenter="property: scale; to: 1.2 1.2 1.2; startEvents: mouseenter; dur: 200"
+                animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200">
+      </a-sphere>
+    </a-entity>
+
+    <!-- Pod 3 — Top centre -->
+    <a-entity id="pod-top" position="0 3.5 -3"
+              animation="property: rotation; to: 0 360 0; dur: 8000; loop: true; easing: linear">
+      <a-torus radius="0.4" radius-tubular="0.06"
+               material="color: #059669; emissive: #059669; emissiveIntensity: 0.4; wireframe: true"></a-torus>
+    </a-entity>
+
+    <!-- ── INFO PANEL (shown on hotspot click) ── -->
+    <a-entity id="info-panel" visible="false" position="0 1.8 -3">
+      <a-plane color="#0a1628" width="3.5" height="2.2"
+               material="color: #0a1628; opacity: 0.95; transparent: true"></a-plane>
+      <a-box color="#0056D2" width="3.6" height="2.35" depth="0.02" position="0 0 -0.02"
+             material="color: #0056D2; opacity: 0.3; transparent: true"></a-box>
+      <a-text id="info-title" value="Compute Services" color="#93C5FD" align="center"
+              width="3" position="0 0.75 0.05" shader="msdf" negate="false"></a-text>
+      <a-text id="info-body"
+              value="Virtual machines, containers,\nand serverless functions.\n\nEC2 · ECS · Lambda\nAzure VMs · GCP Compute"
+              color="#E2E8F0" align="center" width="3" position="0 0.1 0.05" line-height="55"></a-text>
+      <!-- Close button -->
+      <a-box color="#D93025" width="0.8" height="0.25" depth="0.05" position="0 -0.9 0.05"
+             class="clickable" id="close-info"
+             animation__mouseenter="property: material.color; to: #ff5249; startEvents: mouseenter; dur: 100"
+             animation__mouseleave="property: material.color; to: #D93025; startEvents: mouseleave; dur: 100">
+        <a-text value="✕ Close" align="center" color="#fff" width="2" position="0 0 0.04"
+                shader="msdf" negate="false"></a-text>
+      </a-box>
+    </a-entity>
+
+    <!-- ── AMBIENT GLOWING RINGS ── -->
+    <a-torus position="-6 1 -6" radius="1.2" radius-tubular="0.02" rotation="45 0 0"
+             material="color: #0056D2; emissive: #0056D2; emissiveIntensity: 0.6; opacity: 0.5; transparent: true"
+             animation="property: rotation; to: 405 360 0; dur: 12000; loop: true; easing: linear"></a-torus>
+    <a-torus position="6 1 -6" radius="1" radius-tubular="0.02" rotation="0 45 45"
+             material="color: #7C3AED; emissive: #7C3AED; emissiveIntensity: 0.6; opacity: 0.5; transparent: true"
+             animation="property: rotation; to: 360 405 405; dur: 9000; loop: true; easing: linear"></a-torus>
+
+    <!-- ── SIDE PANELS ── -->
+    <!-- Left side panel: Learning Path -->
+    <a-entity position="-7 2 -4" rotation="0 30 0">
+      <a-plane width="2.5" height="3.5" color="#050d1f"
+               material="color: #050d1f; opacity: 0.9; transparent: true"></a-plane>
+      <a-box width="2.55" height="3.6" depth="0.02" position="0 0 -0.02"
+             material="color: #0056D2; opacity: 0.2; transparent: true"></a-box>
+      <a-text value="📋 LEARNING PATH" color="#93C5FD" align="center"
+              width="2.2" position="0 1.5 0.03" shader="msdf" negate="false"></a-text>
+      <a-text value="✅ Intro to Cloud\n✅ Deployment Models\n🔵 Compute Services  ←\n⬜ Storage &amp; DBs\n⬜ Networking\n⬜ Security\n⬜ Final Assessment"
+              color="#94a3b8" align="left" width="2.2" position="-0.9 0.4 0.03" line-height="55"></a-text>
+    </a-entity>
+
+    <!-- Right side panel: Quick Notes -->
+    <a-entity position="7 2 -4" rotation="0 -30 0">
+      <a-plane width="2.5" height="3.5" color="#050d1f"
+               material="color: #050d1f; opacity: 0.9; transparent: true"></a-plane>
+      <a-box width="2.55" height="3.6" depth="0.02" position="0 0 -0.02"
+             material="color: #7C3AED; opacity: 0.2; transparent: true"></a-box>
+      <a-text value="⚡ KEY CONCEPTS" color="#C4AFFF" align="center"
+              width="2.2" position="0 1.5 0.03" shader="msdf" negate="false"></a-text>
+      <a-text value="• On-demand resources\n• Pay-as-you-go pricing\n• Global availability\n• Auto-scaling\n• Managed services\n• High availability SLAs"
+              color="#94a3b8" align="left" width="2.2" position="-0.9 0.4 0.03" line-height="60"></a-text>
+    </a-entity>
+
+    <!-- ── LIGHTING ── -->
+    <a-light type="ambient" color="#0d1b3e" intensity="1.2"></a-light>
+    <a-light type="point" color="#0056D2" intensity="1.5" position="0 5 -3" distance="20"></a-light>
+    <a-light type="point" color="#7C3AED" intensity="0.8" position="-5 3 -5" distance="15"></a-light>
+    <a-light type="point" color="#059669" intensity="0.6" position="5 3 -5" distance="15"></a-light>
+
+  </a-scene>
+
+  <script>
+    // ── Lesson data ──
+    const LESSONS = {
+      cloud: {
+        title: '☁️ Cloud Architecture 101',
+        content: 'Cloud computing delivers on-demand computing\nservices over the internet — enabling faster\ninnovation, flexible resources, and economies of scale.\n\n🔵 IaaS  ·  🟢 PaaS  ·  🟣 SaaS\n\n▸ AWS  |  Azure  |  Google Cloud',
+        skyColor: '#0d1b3e',
+      },
+      ml: {
+        title: '🤖 Machine Learning Fundamentals',
+        content: 'Machine learning enables computers to learn\nfrom data without being explicitly programmed.\n\n📊 Supervised  ·  🔍 Unsupervised  ·  🎮 Reinforcement\n\n▸ Regression  |  Classification  |  Clustering',
+        skyColor: '#1a0d3e',
+      },
+      web: {
+        title: '🌐 Web Development Masterclass',
+        content: 'Modern web development uses a layered stack\nto build fast, responsive, and accessible apps.\n\n🎨 HTML  ·  💅 CSS  ·  ⚡ JavaScript\n\n▸ React  |  Vue  |  Node.js  |  APIs',
+        skyColor: '#0d2a1e',
+      },
+      data: {
+        title: '📊 Data Science & Analytics',
+        content: 'Data science combines statistics, programming,\nand domain expertise to extract insights from data.\n\n🐍 Python  ·  📐 Statistics  ·  📈 Visualization\n\n▸ Pandas  |  NumPy  |  Matplotlib  |  SQL',
+        skyColor: '#2a1a0d',
+      },
+    };
+
+    function loadLesson(key) {
+      const lesson = LESSONS[key];
+      if (!lesson) return;
+      document.getElementById('lesson-title').setAttribute('value', lesson.title);
+      document.getElementById('lesson-content').setAttribute('value', lesson.content);
+      document.getElementById('sky').setAttribute('color', lesson.skyColor);
+      document.querySelectorAll('.lesson-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    // ── Hotspot interactions ──
+    document.addEventListener('DOMContentLoaded', () => {
+      const INFO = {
+        'hotspot-compute': {
+          title: 'Compute Services',
+          body: 'Virtual machines, containers,\nand serverless functions.\n\nEC2 · ECS · Lambda\nAzure VMs · GCP Compute',
+        },
+        'hotspot-storage': {
+          title: 'Storage Services',
+          body: 'Object, block, and file storage\nfor cloud-native applications.\n\nS3 · EBS · EFS\nAzure Blob · GCS',
+        },
+      };
+
+      Object.keys(INFO).forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('click', () => {
+          const panel = document.getElementById('info-panel');
+          const data = INFO[id];
+          document.getElementById('info-title').setAttribute('value', data.title);
+          document.getElementById('info-body').setAttribute('value', data.body);
+          panel.setAttribute('visible', 'true');
+        });
+      });
+
+      document.getElementById('close-info')?.addEventListener('click', () => {
+        document.getElementById('info-panel').setAttribute('visible', 'false');
+      });
+    });
+  </script>
+</body>
+</html>
